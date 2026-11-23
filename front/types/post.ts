@@ -6,9 +6,15 @@ export type PostDto = {
   content: string;
 };
 
+export type PostCommentDto = {
+  id: number;
+  createDate: string;
+  modifyDate: string;
+  content: string;
+};
+
 export type RsData<T> = {
   resultCode: string;
   msg: string;
   data: T;
 };
-

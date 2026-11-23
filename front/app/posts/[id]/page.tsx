@@ -4,17 +4,22 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/backend/client";
-import type { PostDto, RsData } from "@/types/post";
+import type { PostCommentDto, PostDto, RsData } from "@/types/post";
 
 export default function Page() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [post, setPost] = useState<PostDto | null>(null);
+  const [postComments, setPostComments] = useState<PostCommentDto[] | null>(null); // ★
+
 
   useEffect(() => {
     apiFetch<PostDto>(`/api/v1/posts/${id}`)
       .then(setPost)
       .catch((rs: RsData<void>) => alert(rs.msg));
+
+      apiFetch<PostCommentDto[]>(`/api/v1/posts/${id}/comments`)
+      .then(setPostComments)
   }, [id]);
 
   const deletePost = () => {
@@ -56,6 +61,26 @@ export default function Page() {
           삭제
         </button>
       </div>
+      <section className="mt-8 border-t pt-4">
+        <h2 className="text-xl font-bold">댓글</h2>
+
+        {postComments === null && <div>댓글 로딩중...</div>}
+
+        {postComments?.length === 0 && <div>댓글이 없습니다.</div>}
+
+        {postComments !== null && postComments.length > 0 && (
+          <ul className="mt-2 flex flex-col gap-2">
+            {postComments.map((comment) => (
+              <li key={comment.id} className="border p-2 rounded">
+                <div className="text-sm text-gray-500">
+                  {comment.id}번 댓글 · {new Date(comment.createDate).toLocaleString()}
+                </div>
+                <div className="whitespace-pre-line">{comment.content}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </>
   );
 }
