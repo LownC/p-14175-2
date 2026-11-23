@@ -10,7 +10,7 @@ export default function Page() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [post, setPost] = useState<PostDto | null>(null);
-  const [postComments, setPostComments] = useState<PostCommentDto[] | null>(null); // ★
+  const [postComments, setPostComments] = useState<PostCommentDto[] | null>(null);
 
 
   useEffect(() => {
@@ -18,8 +18,8 @@ export default function Page() {
       .then(setPost)
       .catch((rs: RsData<void>) => alert(rs.msg));
 
-      apiFetch<PostCommentDto[]>(`/api/v1/posts/${id}/comments`)
-      .then(setPostComments)
+    apiFetch<PostCommentDto[]>(`/api/v1/posts/${id}/comments`)
+    .then(setPostComments);
   }, [id]);
 
   const deletePost = () => {
@@ -31,6 +31,21 @@ export default function Page() {
       .then((rs) => {
         alert(rs.msg);
         router.replace("/posts");
+      })
+      .catch((rs: RsData<void>) => alert(rs.msg));
+  };
+
+  const deleteComment = (commentId: number) => {
+    if (!confirm(`${commentId}번 댓글을 삭제하시겠습니까?`)) return;
+
+    apiFetch<RsData<void>>(`/api/v1/posts/${id}/comments/${commentId}`, {
+      method: "DELETE",
+    })
+      .then((rs) => {
+        alert(rs.msg);
+        setPostComments((prev) =>
+          prev === null ? prev : prev.filter((comment) => comment.id !== commentId)
+        );
       })
       .catch((rs: RsData<void>) => alert(rs.msg));
   };
@@ -72,8 +87,17 @@ export default function Page() {
           <ul className="mt-2 flex flex-col gap-2">
             {postComments.map((comment) => (
               <li key={comment.id} className="border p-2 rounded">
-                <div className="text-sm text-gray-500">
-                  {comment.id}번 댓글 · {new Date(comment.createDate).toLocaleString()}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
+                    {comment.id}번 댓글 · {new Date(comment.createDate).toLocaleString()}
+                  </span>
+                  <button
+                    type="button"
+                    className="text-sm border px-2 rounded"
+                    onClick={() => deleteComment(comment.id)}
+                  >
+                    삭제
+                  </button>
                 </div>
                 <div className="whitespace-pre-line">{comment.content}</div>
               </li>
