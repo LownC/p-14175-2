@@ -5,3 +5,10 @@ export type PostDto = {
   title: string;
   content: string;
 };
+
+export type RsData<T> = {
+  resultCode: string;
+  msg: string;
+  data: T;
+};
+
