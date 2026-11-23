@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/backend/client";
 import type { PostCommentDto, PostDto, RsData } from "@/types/post";
@@ -12,14 +12,13 @@ export default function Page() {
   const [post, setPost] = useState<PostDto | null>(null);
   const [postComments, setPostComments] = useState<PostCommentDto[] | null>(null);
 
-
   useEffect(() => {
     apiFetch<PostDto>(`/api/v1/posts/${id}`)
       .then(setPost)
       .catch((rs: RsData<void>) => alert(rs.msg));
 
     apiFetch<PostCommentDto[]>(`/api/v1/posts/${id}/comments`)
-    .then(setPostComments);
+      .then(setPostComments);
   }, [id]);
 
   const deletePost = () => {
@@ -46,6 +45,32 @@ export default function Page() {
         setPostComments((prev) =>
           prev === null ? prev : prev.filter((comment) => comment.id !== commentId)
         );
+      })
+      .catch((rs: RsData<void>) => alert(rs.msg));
+  };
+
+  const writeComment = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const form = e.currentTarget;
+    const contentInput = form.elements.namedItem("content") as HTMLTextAreaElement;
+
+    contentInput.value = contentInput.value.trim();
+
+    if (contentInput.value.length < 2) {
+      alert("댓글을 2자 이상 입력해주세요.");
+      contentInput.focus();
+      return;
+    }
+
+    apiFetch<RsData<PostCommentDto>>(`/api/v1/posts/${id}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ content: contentInput.value }),
+    })
+      .then((rs) => {
+        alert(rs.msg);
+        form.reset();
+        setPostComments((prev) => (prev === null ? [rs.data] : [...prev, rs.data]));
       })
       .catch((rs: RsData<void>) => alert(rs.msg));
   };
@@ -78,6 +103,19 @@ export default function Page() {
       </div>
       <section className="mt-8 border-t pt-4">
         <h2 className="text-xl font-bold">댓글</h2>
+        
+        <form className="mt-2 flex gap-2" onSubmit={writeComment}>
+          <textarea
+            className="border p-2 rounded flex-1"
+            name="content"
+            placeholder="댓글을 입력하세요"
+            maxLength={100}
+            rows={2}
+          />
+          <button className="border px-3 rounded" type="submit">
+            작성
+          </button>
+        </form>
 
         {postComments === null && <div>댓글 로딩중...</div>}
 
