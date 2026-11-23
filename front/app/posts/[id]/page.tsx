@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/backend/client";
@@ -44,6 +45,9 @@ export default function Page() {
       <div className="mt-4 whitespace-pre-line">{post.content}</div>
 
       <div className="mt-4 flex gap-2">
+        <Link href={`/posts/${post.id}/edit`} className="border px-2 py-1 rounded">
+          수정
+        </Link>
         <button
           type="button"
           className="border px-2 py-1 rounded"
