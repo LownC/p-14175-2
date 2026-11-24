@@ -180,7 +180,7 @@ function PostCommentWrite({
   };
 
   return (
-    <form className="mt-2 flex gap-2" onSubmit={handleWriteFormSubmit}>
+    <form className="mt-2 flex gap-2 items-start" onSubmit={handleWriteFormSubmit}>
       <textarea
         className="border p-2 rounded flex-1"
         name="content"
@@ -270,7 +270,7 @@ function PostCommentListItem({
       )}
 
       {modifyMode && (
-        <form className="mt-2 flex gap-2" onSubmit={handleModifyFormSubmit}>
+        <form className="mt-2 flex gap-2 items-start" onSubmit={handleModifyFormSubmit}>
           <textarea
             className="border p-2 rounded flex-1"
             name="content"
