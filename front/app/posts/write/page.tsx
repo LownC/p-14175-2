@@ -16,11 +16,24 @@ export default function Page() {
     const contentInput = form.elements.namedItem("content") as HTMLTextAreaElement;
 
     titleInput.value = titleInput.value.trim();
-    contentInput.value = contentInput.value.trim();
+
+    if (titleInput.value.length === 0) {
+      alert("제목을 입력해주세요.");
+      titleInput.focus();
+      return;
+    }
 
     if (titleInput.value.length < 2) {
       alert("제목을 2자 이상 입력해주세요.");
       titleInput.focus();
+      return;
+    }
+
+    contentInput.value = contentInput.value.trim();
+
+    if (contentInput.value.length === 0) {
+      alert("내용을 입력해주세요.");
+      contentInput.focus();
       return;
     }
 
@@ -41,7 +54,7 @@ export default function Page() {
         alert(rs.msg);
         router.replace(`/posts/${rs.data.id}`);
       })
-      .catch((rs: RsData<void>) => alert(rs.msg));
+      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
   };
 
   return (

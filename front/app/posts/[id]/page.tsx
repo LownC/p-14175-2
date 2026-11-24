@@ -15,7 +15,7 @@ export default function Page() {
   useEffect(() => {
     apiFetch<PostDto>(`/api/v1/posts/${id}`)
       .then(setPost)
-      .catch((rs: RsData<void>) => alert(rs.msg));
+      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
 
     apiFetch<PostCommentDto[]>(`/api/v1/posts/${id}/comments`)
       .then(setPostComments);
@@ -31,7 +31,7 @@ export default function Page() {
         alert(rs.msg);
         router.replace("/posts");
       })
-      .catch((rs: RsData<void>) => alert(rs.msg));
+      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
   };
 
   const deleteComment = (commentId: number) => {
@@ -46,7 +46,7 @@ export default function Page() {
           prev === null ? prev : prev.filter((comment) => comment.id !== commentId)
         );
       })
-      .catch((rs: RsData<void>) => alert(rs.msg));
+      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
   };
 
   const writeComment = (e: FormEvent<HTMLFormElement>) => {
@@ -57,8 +57,14 @@ export default function Page() {
 
     contentInput.value = contentInput.value.trim();
 
+    if (contentInput.value.length === 0) {
+      alert("댓글 내용을 입력해주세요.");
+      contentInput.focus();
+      return;
+    }
+
     if (contentInput.value.length < 2) {
-      alert("댓글을 2자 이상 입력해주세요.");
+      alert("댓글 내용을 2자 이상 입력해주세요.");
       contentInput.focus();
       return;
     }
@@ -72,7 +78,7 @@ export default function Page() {
         form.reset();
         setPostComments((prev) => (prev === null ? [rs.data] : [...prev, rs.data]));
       })
-      .catch((rs: RsData<void>) => alert(rs.msg));
+      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
   };
 
   if (post === null) return <div>로딩중...</div>;
