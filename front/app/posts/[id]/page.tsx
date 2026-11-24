@@ -68,11 +68,34 @@ function usePostComments(postId: number) {
       .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
   };
 
+  const modifyComment = (
+    commentId: number,
+    content: string,
+    onSuccess: (rs: RsData<void>) => void
+  ) => {
+    apiFetch<RsData<void>>(`/api/v1/posts/${postId}/comments/${commentId}`, {
+      method: "PUT",
+      body: JSON.stringify({ content }),
+    })
+      .then((rs) => {
+        setPostComments((prev) =>
+          prev === null
+            ? prev
+            : prev.map((comment) =>
+                comment.id === commentId ? { ...comment, content } : comment
+              )
+        );
+        onSuccess(rs);
+      })
+      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
+  };
+
   return {
     postId,
     postComments,
     deleteComment,
     writeComment,
+    modifyComment,
   };
 }
 
@@ -180,7 +203,7 @@ function PostCommentListItem({
   postCommentsState: ReturnType<typeof usePostComments>;
 }) {
   const [modifyMode, setModifyMode] = useState(false);
-  const { deleteComment: _deleteComment } = postCommentsState;
+  const { deleteComment: _deleteComment, modifyComment } = postCommentsState;
 
   const toggleModifyMode = () => {
     setModifyMode((prev) => !prev);
@@ -194,7 +217,28 @@ function PostCommentListItem({
 
   const handleModifyFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // 024에서 수정 API 호출을 구현합니다.
+
+    const form = e.currentTarget;
+    const contentInput = form.elements.namedItem("content") as HTMLTextAreaElement;
+
+    contentInput.value = contentInput.value.trim();
+
+    if (contentInput.value.length === 0) {
+      alert("댓글 내용을 입력해주세요.");
+      contentInput.focus();
+      return;
+    }
+
+    if (contentInput.value.length < 2) {
+      alert("댓글 내용을 2자 이상 입력해주세요.");
+      contentInput.focus();
+      return;
+    }
+
+    modifyComment(comment.id, contentInput.value, (rs) => {
+      alert(rs.msg);
+      setModifyMode(false);
+    });
   };
 
   return (
