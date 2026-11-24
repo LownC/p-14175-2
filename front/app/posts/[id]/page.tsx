@@ -15,7 +15,7 @@ function usePost(id: number) {
       .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
   }, [id]);
 
-  const deletePost = (id: number, onSuccess: (rs: RsData<void>) => void) => {
+  const deletePost = (onSuccess: (rs: RsData<void>) => void) => {
     apiFetch<RsData<void>>(`/api/v1/posts/${id}`, {
       method: "DELETE",
     })
@@ -38,7 +38,6 @@ function usePostComments(id: number) {
   }, [id]);
 
   const deleteComment = (
-    id: number,
     commentId: number,
     onSuccess: (rs: RsData<void>) => void
   ) => {
@@ -55,7 +54,6 @@ function usePostComments(id: number) {
   };
 
   const writeComment = (
-    id: number,
     content: string,
     onSuccess: (rs: RsData<PostCommentDto>) => void
   ) => {
@@ -71,6 +69,7 @@ function usePostComments(id: number) {
   };
 
   return {
+    id,
     postComments,
     deleteComment,
     writeComment,
@@ -90,7 +89,7 @@ function PostInfo({
   const deletePost = () => {
     if(!confirm(`${post.id}번 글을 삭제하시겠습니까?`)) return;
 
-    _deletePost(post.id, (rs) => {
+    _deletePost((rs) => {
       alert(rs.msg);
       router.replace("/posts");
     });
@@ -125,10 +124,8 @@ function PostInfo({
 }
 
 function PostCommentWrite({
-  id,
   postCommentsState,
 }: {
-  id: number;
   postCommentsState: ReturnType<typeof usePostComments>;
 }) {
   const { writeComment } = postCommentsState;
@@ -153,7 +150,7 @@ function PostCommentWrite({
       return;
     }
 
-    writeComment(id, contentInput.value, (rs) => {
+    writeComment(contentInput.value, (rs) => {
       alert(rs.msg);
       form.reset();
     });
@@ -176,10 +173,8 @@ function PostCommentWrite({
 }
 
 function PostCommentList({
-  id,
   postCommentsState,
 }: {
-  id: number;
   postCommentsState: ReturnType<typeof usePostComments>;
 }) {
   const { postComments, deleteComment: _deleteComment } = postCommentsState;
@@ -187,7 +182,7 @@ function PostCommentList({
   const deleteComment = (commentId: number) => {
     if (!confirm(`${commentId}번 댓글을 삭제하시겠습니까?`)) return;
 
-    _deleteComment(id, commentId, (rs) => alert(rs.msg));
+    _deleteComment(commentId, (rs) => alert(rs.msg));
   };
 
   if (postComments === null) return <div>댓글 로딩중...</div>;
@@ -218,19 +213,19 @@ function PostCommentList({
 }
 
 function PostCommentWriteAndList({
-  id,
   postCommentsState,
 }: {
-  id: number;
   postCommentsState: ReturnType<typeof usePostComments>;
 }) {
+  const { id } = postCommentsState;
+
   return (
     <section className="mt-8 border-t pt-4">
-      <h2 className="text-xl font-bold">댓글</h2>
+      <h2 className="text-xl font-bold">{id}번 글의 댓글</h2>
 
-      <PostCommentWrite id={id} postCommentsState={postCommentsState} />
+      <PostCommentWrite postCommentsState={postCommentsState} />
 
-      <PostCommentList id={id} postCommentsState={postCommentsState} />
+      <PostCommentList postCommentsState={postCommentsState} />
     </section>
   );
 }
@@ -246,7 +241,7 @@ export default function Page() {
     <>
       <PostInfo postState={postState} />
 
-      <PostCommentWriteAndList id={id} postCommentsState={postCommentsState} />
+      <PostCommentWriteAndList postCommentsState={postCommentsState} />
     </>
   );
 }
