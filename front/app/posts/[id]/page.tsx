@@ -172,18 +172,46 @@ function PostCommentWrite({
   );
 }
 
+function PostCommentListItem({
+  comment,
+  postCommentsState,
+}: {
+  comment: PostCommentDto;
+  postCommentsState: ReturnType<typeof usePostComments>;
+}) {
+  const { deleteComment: _deleteComment } = postCommentsState;
+
+  const deleteComment = () => {
+    if (!confirm(`${comment.id}번 댓글을 삭제하시겠습니까?`)) return;
+
+    _deleteComment(comment.id, (rs) => alert(rs.msg));
+  };
+
+  return (
+    <li className="border p-2 rounded">
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-gray-500">
+          {comment.id}번 댓글 · {new Date(comment.createDate).toLocaleString()}
+        </span>
+        <button
+          type="button"
+          className="text-sm border px-2 rounded"
+          onClick={deleteComment}
+        >
+          삭제
+        </button>
+      </div>
+      <div className="whitespace-pre-line">{comment.content}</div>
+    </li>
+  );
+}
+
 function PostCommentList({
   postCommentsState,
 }: {
   postCommentsState: ReturnType<typeof usePostComments>;
 }) {
-  const { postComments, deleteComment: _deleteComment } = postCommentsState;
-
-  const deleteComment = (commentId: number) => {
-    if (!confirm(`${commentId}번 댓글을 삭제하시겠습니까?`)) return;
-
-    _deleteComment(commentId, (rs) => alert(rs.msg));
-  };
+  const { postComments } = postCommentsState;
 
   if (postComments === null) return <div>댓글 로딩중...</div>;
 
@@ -192,21 +220,11 @@ function PostCommentList({
   return (
     <ul className="mt-2 flex flex-col gap-2">
       {postComments.map((comment) => (
-        <li key={comment.id} className="border p-2 rounded">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500">
-              {comment.id}번 댓글 · {new Date(comment.createDate).toLocaleString()}
-            </span>
-            <button
-              type="button"
-              className="text-sm border px-2 rounded"
-              onClick={() => deleteComment(comment.id)}
-            >
-              삭제
-            </button>
-          </div>
-          <div className="whitespace-pre-line">{comment.content}</div>
-        </li>
+        <PostCommentListItem
+          key={comment.id}
+          comment={comment}
+          postCommentsState={postCommentsState}
+        />
       ))}
     </ul>
   );
