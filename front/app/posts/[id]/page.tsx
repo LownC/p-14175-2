@@ -29,19 +29,19 @@ function usePost(id: number) {
   };
 }
 
-function usePostComments(id: number) {
+function usePostComments(postId: number) {
   const [postComments, setPostComments] = useState<PostCommentDto[] | null>(null);
 
   useEffect(() => {
-    apiFetch<PostCommentDto[]>(`/api/v1/posts/${id}/comments`)
+    apiFetch<PostCommentDto[]>(`/api/v1/posts/${postId}/comments`)
       .then(setPostComments);
-  }, [id]);
+  }, [postId]);
 
   const deleteComment = (
     commentId: number,
     onSuccess: (rs: RsData<void>) => void
   ) => {
-    apiFetch<RsData<void>>(`/api/v1/posts/${id}/comments/${commentId}`, {
+    apiFetch<RsData<void>>(`/api/v1/posts/${postId}/comments/${commentId}`, {
       method: "DELETE",
     })
       .then((rs) => {
@@ -57,7 +57,7 @@ function usePostComments(id: number) {
     content: string,
     onSuccess: (rs: RsData<PostCommentDto>) => void
   ) => {
-    apiFetch<RsData<PostCommentDto>>(`/api/v1/posts/${id}/comments`, {
+    apiFetch<RsData<PostCommentDto>>(`/api/v1/posts/${postId}/comments`, {
       method: "POST",
       body: JSON.stringify({ content }),
     })
@@ -69,7 +69,7 @@ function usePostComments(id: number) {
   };
 
   return {
-    id,
+    postId,
     postComments,
     deleteComment,
     writeComment,
@@ -217,11 +217,11 @@ function PostCommentWriteAndList({
 }: {
   postCommentsState: ReturnType<typeof usePostComments>;
 }) {
-  const { id } = postCommentsState;
+  const { postId } = postCommentsState;
 
   return (
     <section className="mt-8 border-t pt-4">
-      <h2 className="text-xl font-bold">{id}번 글의 댓글</h2>
+      <h2 className="text-xl font-bold">{postId}번 글의 댓글</h2>
 
       <PostCommentWrite postCommentsState={postCommentsState} />
 
