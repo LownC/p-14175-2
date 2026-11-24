@@ -83,9 +83,18 @@ function PostInfo({
   postState: ReturnType<typeof usePost>;
 }) {
   const router = useRouter();
-  const {post, deletePost} = postState;
+  const { post, deletePost: _deletePost } = postState;
 
   if (post === null) return <div>로딩중...</div>;
+
+  const deletePost = () => {
+    if(!confirm(`${post.id}번 글을 삭제하시겠습니까?`)) return;
+
+    _deletePost(post.id, (rs) => {
+      alert(rs.msg);
+      router.replace("/posts");
+    });
+  };
 
   return (
     <>
@@ -106,13 +115,7 @@ function PostInfo({
         <button
           type="button"
           className="border px-2 py-1 rounded"
-          onClick={() =>
-            confirm(`${post.id}번 글을 삭제하시겠습니까?`) &&
-            deletePost(post.id, (rs) => {
-              alert(rs.msg);
-              router.replace("/posts");
-            })
-          }
+          onClick={deletePost}
         >
           삭제
         </button>
@@ -128,7 +131,13 @@ function PostCommentWriteAndList({
   id: number;
   postCommentsState: ReturnType<typeof usePostComments>;
 }) {
-  const { postComments, deleteComment, writeComment } = postCommentsState;
+  const { postComments, deleteComment: _deleteComment, writeComment } = postCommentsState;
+
+  const deleteComment = (commentId: number) => {
+    if(!confirm(`${commentId}번 댓글을 삭제하시겠습니까?`)) return;
+
+    _deleteComment(id, commentId, (rs) => alert(rs.msg));
+  };
 
   const handleWriteFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -188,10 +197,7 @@ function PostCommentWriteAndList({
                 <button
                   type="button"
                   className="text-sm border px-2 rounded"
-                  onClick={() =>
-                    confirm(`${comment.id}번 댓글을 삭제하시겠습니까?`) &&
-                    deleteComment(id, comment.id, (rs) => alert(rs.msg))
-                  }
+                  onClick={() => deleteComment(comment.id)}
                 >
                   삭제
                 </button>
