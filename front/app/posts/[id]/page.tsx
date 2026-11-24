@@ -6,21 +6,37 @@ import { useParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/backend/client";
 import type { PostCommentDto, PostDto, RsData } from "@/types/post";
 
-function PostInfo({ post }: { post: PostDto }) {
-  const router = useRouter();
+function usePost(id: string) {
+  const [post, setPost] = useState<PostDto | null>(null);
 
-  const deletePost = () => {
-    if (!confirm(`${post.id}번 글을 삭제하시겠습니까?`)) return;
+  useEffect(() => {
+    apiFetch<PostDto>(`/api/v1/posts/${id}`)
+      .then(setPost)
+      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
+  }, [id]);
 
-    apiFetch<RsData<void>>(`/api/v1/posts/${post.id}`, {
+  const deletePost = (id: number, onSuccess: (rs: RsData<void>) => void) => {
+    apiFetch<RsData<void>>(`/api/v1/posts/${id}`, {
       method: "DELETE",
     })
-      .then((rs) => {
-        alert(rs.msg);
-        router.replace("/posts");
-      })
+      .then(onSuccess)
       .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
   };
+
+  return {
+    post,
+    deletePost,
+  };
+}
+
+function PostInfo({
+  post,
+  deletePost,
+}: {
+  post: PostDto;
+  deletePost: (id: number, onSuccess: (rs: RsData<void>) => void) => void;
+}) {
+  const router = useRouter();
 
   return (
     <>
@@ -41,7 +57,13 @@ function PostInfo({ post }: { post: PostDto }) {
         <button
           type="button"
           className="border px-2 py-1 rounded"
-          onClick={deletePost}
+          onClick={() =>
+            confirm(`${post.id}번 글을 삭제하시겠습니까?`) &&
+            deletePost(post.id, (rs) => {
+              alert(rs.msg);
+              router.replace("/posts");
+            })
+          }
         >
           삭제
         </button>
@@ -154,14 +176,10 @@ function PostCommentWriteAndList({
 
 export default function Page() {
   const { id } = useParams<{ id: string }>();
-  const [post, setPost] = useState<PostDto | null>(null);
+  const { post, deletePost } = usePost(id);
   const [postComments, setPostComments] = useState<PostCommentDto[] | null>(null);
 
   useEffect(() => {
-    apiFetch<PostDto>(`/api/v1/posts/${id}`)
-      .then(setPost)
-      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
-
     apiFetch<PostCommentDto[]>(`/api/v1/posts/${id}/comments`)
       .then(setPostComments);
   }, [id]);
@@ -170,7 +188,7 @@ export default function Page() {
 
   return (
     <>
-      <PostInfo post={post} />
+      <PostInfo post={post} deletePost={deletePost} />
 
       <PostCommentWriteAndList
         id={id}
