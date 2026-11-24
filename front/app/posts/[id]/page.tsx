@@ -124,20 +124,14 @@ function PostInfo({
   );
 }
 
-function PostCommentWriteAndList({
+function PostCommentWrite({
   id,
   postCommentsState,
 }: {
   id: number;
   postCommentsState: ReturnType<typeof usePostComments>;
 }) {
-  const { postComments, deleteComment: _deleteComment, writeComment } = postCommentsState;
-
-  const deleteComment = (commentId: number) => {
-    if(!confirm(`${commentId}번 댓글을 삭제하시겠습니까?`)) return;
-
-    _deleteComment(id, commentId, (rs) => alert(rs.msg));
-  };
+  const { writeComment } = postCommentsState;
 
   const handleWriteFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -166,47 +160,77 @@ function PostCommentWriteAndList({
   };
 
   return (
+    <form className="mt-2 flex gap-2" onSubmit={handleWriteFormSubmit}>
+      <textarea
+        className="border p-2 rounded flex-1"
+        name="content"
+        placeholder="댓글을 입력하세요"
+        maxLength={100}
+        rows={2}
+      />
+      <button className="border px-3 rounded" type="submit">
+        작성
+      </button>
+    </form>
+  );
+}
+
+function PostCommentList({
+  id,
+  postCommentsState,
+}: {
+  id: number;
+  postCommentsState: ReturnType<typeof usePostComments>;
+}) {
+  const { postComments, deleteComment: _deleteComment } = postCommentsState;
+
+  const deleteComment = (commentId: number) => {
+    if (!confirm(`${commentId}번 댓글을 삭제하시겠습니까?`)) return;
+
+    _deleteComment(id, commentId, (rs) => alert(rs.msg));
+  };
+
+  if (postComments === null) return <div>댓글 로딩중...</div>;
+
+  if (postComments.length === 0) return <div>댓글이 없습니다.</div>;
+
+  return (
+    <ul className="mt-2 flex flex-col gap-2">
+      {postComments.map((comment) => (
+        <li key={comment.id} className="border p-2 rounded">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">
+              {comment.id}번 댓글 · {new Date(comment.createDate).toLocaleString()}
+            </span>
+            <button
+              type="button"
+              className="text-sm border px-2 rounded"
+              onClick={() => deleteComment(comment.id)}
+            >
+              삭제
+            </button>
+          </div>
+          <div className="whitespace-pre-line">{comment.content}</div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PostCommentWriteAndList({
+  id,
+  postCommentsState,
+}: {
+  id: number;
+  postCommentsState: ReturnType<typeof usePostComments>;
+}) {
+  return (
     <section className="mt-8 border-t pt-4">
       <h2 className="text-xl font-bold">댓글</h2>
 
-      <form className="mt-2 flex gap-2" onSubmit={handleWriteFormSubmit}>
-        <textarea
-          className="border p-2 rounded flex-1"
-          name="content"
-          placeholder="댓글을 입력하세요"
-          maxLength={100}
-          rows={2}
-        />
-        <button className="border px-3 rounded" type="submit">
-          작성
-        </button>
-      </form>
+      <PostCommentWrite id={id} postCommentsState={postCommentsState} />
 
-      {postComments === null && <div>댓글 로딩중...</div>}
-
-      {postComments?.length === 0 && <div>댓글이 없습니다.</div>}
-
-      {postComments !== null && postComments.length > 0 && (
-        <ul className="mt-2 flex flex-col gap-2">
-          {postComments.map((comment) => (
-            <li key={comment.id} className="border p-2 rounded">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">
-                  {comment.id}번 댓글 · {new Date(comment.createDate).toLocaleString()}
-                </span>
-                <button
-                  type="button"
-                  className="text-sm border px-2 rounded"
-                  onClick={() => deleteComment(comment.id)}
-                >
-                  삭제
-                </button>
-              </div>
-              <div className="whitespace-pre-line">{comment.content}</div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <PostCommentList id={id} postCommentsState={postCommentsState} />
     </section>
   );
 }
