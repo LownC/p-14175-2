@@ -80,10 +80,7 @@ function usePostComments(id: number) {
 function PostInfo({
   postState,
 }: {
-  postState: {
-  post: PostDto | null;
-  deletePost: (id: number, onSuccess: (rs: RsData<void>) => void) => void;
-  };
+  postState: ReturnType<typeof usePost>;
 }) {
   const router = useRouter();
   const {post, deletePost} = postState;
@@ -129,19 +126,7 @@ function PostCommentWriteAndList({
   postCommentsState,
 }: {
   id: number;
-  postCommentsState: {
-    postComments: PostCommentDto[] | null;
-    deleteComment: (
-      id: number,
-      commentId: number,
-      onSuccess: (rs: RsData<void>) => void
-    ) => void;
-    writeComment: (
-      id: number,
-      content: string,
-      onSuccess: (rs: RsData<PostCommentDto>) => void
-    ) => void;
-};
+  postCommentsState: ReturnType<typeof usePostComments>;
 }) {
   const { postComments, deleteComment, writeComment } = postCommentsState;
 
