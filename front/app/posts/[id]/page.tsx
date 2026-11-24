@@ -78,13 +78,17 @@ function usePostComments(id: number) {
 }
 
 function PostInfo({
-  post,
-  deletePost,
+  postState,
 }: {
-  post: PostDto;
+  postState: {
+  post: PostDto | null;
   deletePost: (id: number, onSuccess: (rs: RsData<void>) => void) => void;
+  };
 }) {
   const router = useRouter();
+  const {post, deletePost} = postState;
+
+  if (post === null) return <div>로딩중...</div>;
 
   return (
     <>
@@ -122,23 +126,25 @@ function PostInfo({
 
 function PostCommentWriteAndList({
   id,
-  postComments,
-  deleteComment,
-  writeComment,
+  postCommentsState,
 }: {
   id: number;
-  postComments: PostCommentDto[] | null;
-  deleteComment: (
-    id: number,
-    commentId: number,
-    onSuccess: (rs: RsData<void>) => void
-  ) => void;
-  writeComment: (
-    id: number,
-    content: string,
-    onSuccess: (rs: RsData<PostCommentDto>) => void
-  ) => void;
+  postCommentsState: {
+    postComments: PostCommentDto[] | null;
+    deleteComment: (
+      id: number,
+      commentId: number,
+      onSuccess: (rs: RsData<void>) => void
+    ) => void;
+    writeComment: (
+      id: number,
+      content: string,
+      onSuccess: (rs: RsData<PostCommentDto>) => void
+    ) => void;
+};
 }) {
+  const { postComments, deleteComment, writeComment } = postCommentsState;
+
   const handleWriteFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -218,21 +224,14 @@ export default function Page() {
   const { id: idStr } = useParams<{ id: string }>();
   const id = Number(idStr);
 
-  const { post, deletePost } = usePost(id);
-  const { postComments, deleteComment, writeComment } = usePostComments(id);
-
-  if (post === null) return <div>로딩중...</div>;
+  const postState = usePost(id);
+  const postCommentsState = usePostComments(id);
 
   return (
     <>
-      <PostInfo post={post} deletePost={deletePost} />
+      <PostInfo postState={postState} />
 
-      <PostCommentWriteAndList
-        id={id}
-        postComments={postComments}
-        deleteComment={deleteComment}
-        writeComment={writeComment}
-      />
+      <PostCommentWriteAndList id={id} postCommentsState={postCommentsState} />
     </>
   );
 }
