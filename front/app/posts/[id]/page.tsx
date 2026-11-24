@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Dispatch, FormEvent, SetStateAction, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/backend/client";
 import type { PostCommentDto, PostDto, RsData } from "@/types/post";
 
-function usePost(id: string) {
+function usePost(id: number) {
   const [post, setPost] = useState<PostDto | null>(null);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ function usePost(id: string) {
   };
 }
 
-function usePostComments(id: string) {
+function usePostComments(id: number) {
   const [postComments, setPostComments] = useState<PostCommentDto[] | null>(null);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ function usePostComments(id: string) {
   }, [id]);
 
   const deleteComment = (
-    id: string,
+    id: number,
     commentId: number,
     onSuccess: (rs: RsData<void>) => void
   ) => {
@@ -55,7 +55,7 @@ function usePostComments(id: string) {
   };
 
   const writeComment = (
-    id: string,
+    id: number,
     content: string,
     onSuccess: (rs: RsData<PostCommentDto>) => void
   ) => {
@@ -126,15 +126,15 @@ function PostCommentWriteAndList({
   deleteComment,
   writeComment,
 }: {
-  id: string;
+  id: number;
   postComments: PostCommentDto[] | null;
   deleteComment: (
-    id: string,
+    id: number,
     commentId: number,
     onSuccess: (rs: RsData<void>) => void
   ) => void;
   writeComment: (
-    id: string,
+    id: number,
     content: string,
     onSuccess: (rs: RsData<PostCommentDto>) => void
   ) => void;
@@ -215,7 +215,9 @@ function PostCommentWriteAndList({
 }
 
 export default function Page() {
-  const { id } = useParams<{ id: string }>();
+  const { id: idStr } = useParams<{ id: string }>();
+  const id = Number(idStr);
+
   const { post, deletePost } = usePost(id);
   const { postComments, deleteComment, writeComment } = usePostComments(id);
 
