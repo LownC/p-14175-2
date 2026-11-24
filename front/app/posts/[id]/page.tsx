@@ -29,6 +29,54 @@ function usePost(id: string) {
   };
 }
 
+function usePostComments(id: string) {
+  const [postComments, setPostComments] = useState<PostCommentDto[] | null>(null);
+
+  useEffect(() => {
+    apiFetch<PostCommentDto[]>(`/api/v1/posts/${id}/comments`)
+      .then(setPostComments);
+  }, [id]);
+
+  const deleteComment = (
+    id: string,
+    commentId: number,
+    onSuccess: (rs: RsData<void>) => void
+  ) => {
+    apiFetch<RsData<void>>(`/api/v1/posts/${id}/comments/${commentId}`, {
+      method: "DELETE",
+    })
+      .then((rs) => {
+        setPostComments((prev) =>
+          prev === null ? prev : prev.filter((comment) => comment.id !== commentId)
+        );
+        onSuccess(rs);
+      })
+      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
+  };
+
+  const writeComment = (
+    id: string,
+    content: string,
+    onSuccess: (rs: RsData<PostCommentDto>) => void
+  ) => {
+    apiFetch<RsData<PostCommentDto>>(`/api/v1/posts/${id}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ content }),
+    })
+      .then((rs) => {
+        setPostComments((prev) => (prev === null ? [rs.data] : [...prev, rs.data]));
+        onSuccess(rs);
+      })
+      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
+  };
+
+  return {
+    postComments,
+    deleteComment,
+    writeComment,
+  };
+}
+
 function PostInfo({
   post,
   deletePost,
@@ -75,28 +123,23 @@ function PostInfo({
 function PostCommentWriteAndList({
   id,
   postComments,
-  setPostComments,
+  deleteComment,
+  writeComment,
 }: {
   id: string;
   postComments: PostCommentDto[] | null;
-  setPostComments: Dispatch<SetStateAction<PostCommentDto[] | null>>;
+  deleteComment: (
+    id: string,
+    commentId: number,
+    onSuccess: (rs: RsData<void>) => void
+  ) => void;
+  writeComment: (
+    id: string,
+    content: string,
+    onSuccess: (rs: RsData<PostCommentDto>) => void
+  ) => void;
 }) {
-  const deleteComment = (commentId: number) => {
-    if (!confirm(`${commentId}번 댓글을 삭제하시겠습니까?`)) return;
-
-    apiFetch<RsData<void>>(`/api/v1/posts/${id}/comments/${commentId}`, {
-      method: "DELETE",
-    })
-      .then((rs) => {
-        alert(rs.msg);
-        setPostComments((prev) =>
-          prev === null ? prev : prev.filter((comment) => comment.id !== commentId)
-        );
-      })
-      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
-  };
-
-  const writeComment = (e: FormEvent<HTMLFormElement>) => {
+  const handleWriteFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const form = e.currentTarget;
@@ -116,23 +159,17 @@ function PostCommentWriteAndList({
       return;
     }
 
-    apiFetch<RsData<PostCommentDto>>(`/api/v1/posts/${id}/comments`, {
-      method: "POST",
-      body: JSON.stringify({ content: contentInput.value }),
-    })
-      .then((rs) => {
-        alert(rs.msg);
-        form.reset();
-        setPostComments((prev) => (prev === null ? [rs.data] : [...prev, rs.data]));
-      })
-      .catch((rs: RsData<void>) => alert(`${rs.resultCode} : ${rs.msg}`));
+    writeComment(id, contentInput.value, (rs) => {
+      alert(rs.msg);
+      form.reset();
+    });
   };
 
   return (
     <section className="mt-8 border-t pt-4">
       <h2 className="text-xl font-bold">댓글</h2>
 
-      <form className="mt-2 flex gap-2" onSubmit={writeComment}>
+      <form className="mt-2 flex gap-2" onSubmit={handleWriteFormSubmit}>
         <textarea
           className="border p-2 rounded flex-1"
           name="content"
@@ -160,7 +197,10 @@ function PostCommentWriteAndList({
                 <button
                   type="button"
                   className="text-sm border px-2 rounded"
-                  onClick={() => deleteComment(comment.id)}
+                  onClick={() =>
+                    confirm(`${comment.id}번 댓글을 삭제하시겠습니까?`) &&
+                    deleteComment(id, comment.id, (rs) => alert(rs.msg))
+                  }
                 >
                   삭제
                 </button>
@@ -177,12 +217,7 @@ function PostCommentWriteAndList({
 export default function Page() {
   const { id } = useParams<{ id: string }>();
   const { post, deletePost } = usePost(id);
-  const [postComments, setPostComments] = useState<PostCommentDto[] | null>(null);
-
-  useEffect(() => {
-    apiFetch<PostCommentDto[]>(`/api/v1/posts/${id}/comments`)
-      .then(setPostComments);
-  }, [id]);
+  const { postComments, deleteComment, writeComment } = usePostComments(id);
 
   if (post === null) return <div>로딩중...</div>;
 
@@ -193,7 +228,8 @@ export default function Page() {
       <PostCommentWriteAndList
         id={id}
         postComments={postComments}
-        setPostComments={setPostComments}
+        deleteComment={deleteComment}
+        writeComment={writeComment}
       />
     </>
   );
