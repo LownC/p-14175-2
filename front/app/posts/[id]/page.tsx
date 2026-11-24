@@ -179,12 +179,22 @@ function PostCommentListItem({
   comment: PostCommentDto;
   postCommentsState: ReturnType<typeof usePostComments>;
 }) {
+  const [modifyMode, setModifyMode] = useState(false);
   const { deleteComment: _deleteComment } = postCommentsState;
+
+  const toggleModifyMode = () => {
+    setModifyMode((prev) => !prev);
+  };
 
   const deleteComment = () => {
     if (!confirm(`${comment.id}번 댓글을 삭제하시겠습니까?`)) return;
 
     _deleteComment(comment.id, (rs) => alert(rs.msg));
+  };
+
+  const handleModifyFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // 024에서 수정 API 호출을 구현합니다.
   };
 
   return (
@@ -193,15 +203,44 @@ function PostCommentListItem({
         <span className="text-sm text-gray-500">
           {comment.id}번 댓글 · {new Date(comment.createDate).toLocaleString()}
         </span>
-        <button
-          type="button"
-          className="text-sm border px-2 rounded"
-          onClick={deleteComment}
-        >
-          삭제
-        </button>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            className="text-sm border px-2 rounded"
+            onClick={toggleModifyMode}
+          >
+            {modifyMode ? "수정취소" : "수정"}
+          </button>
+          <button
+            type="button"
+            className="text-sm border px-2 rounded"
+            onClick={deleteComment}
+          >
+            삭제
+          </button>
+        </div>
       </div>
-      <div className="whitespace-pre-line">{comment.content}</div>
+
+      {!modifyMode && (
+        <div className="whitespace-pre-line">{comment.content}</div>
+      )}
+
+      {modifyMode && (
+        <form className="mt-2 flex gap-2" onSubmit={handleModifyFormSubmit}>
+          <textarea
+            className="border p-2 rounded flex-1"
+            name="content"
+            placeholder="댓글 내용"
+            maxLength={100}
+            rows={2}
+            defaultValue={comment.content}
+            autoFocus
+          />
+          <button className="border px-3 rounded" type="submit">
+            저장
+          </button>
+        </form>
+      )}
     </li>
   );
 }
